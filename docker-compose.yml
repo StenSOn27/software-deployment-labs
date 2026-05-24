@@ -1,0 +1,63 @@
+version: '3.9'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: software-labs-db
+    environment:
+      MYSQL_DATABASE: software_labs
+      MYSQL_USER: app_user
+      MYSQL_PASSWORD: app_password_123
+      MYSQL_ROOT_PASSWORD: root_password_123
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+      interval: 5s
+
+  web:
+    build: .
+    container_name: software-labs-web
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      CONFIG_FILE_PATH: src/config.ini
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/alive"]
+      timeout: 10s
+      retries: 5
+      interval: 5s
+
+  nginx:
+    image: nginx:alpine
+    container_name: software-labs-nginx
+    depends_on:
+      - web
+    ports:
+      - "80:80"
+    volumes:
+      - ./deployment/configs/nginx.docker.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - app_network
+    command: ["nginx", "-g", "daemon off;"]
+
+volumes:
+  db_data:
+    driver: local
+
+networks:
+  app_network:
+    driver: bridge

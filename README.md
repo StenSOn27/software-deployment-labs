@@ -347,6 +347,86 @@ sudo systemctl status mywebapp
 sudo tail -f /var/log/nginx/error.log
 ```
 
+## Розгортання з Docker Compose
+
+### Вимоги
+
+- Docker 20.10+
+- Docker Compose 2.0+
+
+### Запуск усіх сервісів
+
+```bash
+# Створіть та запустіть контейнери
+docker-compose up -d
+
+# Перевірте статус
+docker-compose ps
+```
+
+Застосунок буде доступний за адресом: **http://localhost**
+
+### Сервіси
+
+Docker Compose запускає три сервіси:
+
+- **db** (MySQL 8.0): База даних на порті 3306
+- **web** (FastAPI): Веб-застосунок на порті 8000
+- **nginx** (Nginx): Reverse proxy на порті 80
+
+### Управління сервісами
+
+```bash
+# Перегляд логів
+docker-compose logs -f web
+docker-compose logs -f db
+docker-compose logs -f nginx
+
+# Запуск тільки конкретного сервісу
+docker-compose up -d web
+
+# Зупинка сервісів
+docker-compose down
+
+# Видалення з очищенням томів (УВАГА: видалить БД!)
+docker-compose down -v
+
+# Перебудова образу
+docker-compose build --no-cache
+```
+
+### Тестування через Docker
+
+```bash
+# Перевіра живості
+curl http://localhost/health/alive
+
+# Перевіра готовності
+curl http://localhost/health/ready
+
+# Отримати JSON список завдань
+curl -H "Accept: application/json" http://localhost/tasks/
+
+# Додати нове завдання
+curl -X POST http://localhost/tasks/new -d "title=Test Task"
+```
+
+### Обʼєм дані
+
+База даних MySQL автоматично створює том `db_data` для персистентності. Дані будуть збережені навіть після видалення контейнера.
+
+```bash
+# Переглянути томи
+docker volume ls
+
+# Видалити том (УВАГА: видалить дані!)
+docker volume rm software-deployment-labs_db_data
+```
+
+### Мережа
+
+Всі сервіси работают в окремій мережі `app_network`, що забезпечує безпечну комунікацію між ними.
+
 ## Документація розробника
 
 Додаткові файли документації:
