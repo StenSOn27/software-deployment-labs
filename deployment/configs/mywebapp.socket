@@ -1,0 +1,15 @@
+[Unit]
+Description=Software Deployment Labs Web Application Socket
+Before=mywebapp.service
+
+[Socket]
+ListenStream=127.0.0.1:8000
+Accept=no
+
+# Set socket ownership
+SocketUser=app
+SocketGroup=app
+SocketMode=0660
+
+[Install]
+WantedBy=sockets.target

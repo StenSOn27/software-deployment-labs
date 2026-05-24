@@ -1,0 +1,36 @@
+[Unit]
+Description=Software Deployment Labs Web Application
+After=network.target mysql.service
+
+[Service]
+Type=notify
+User=app
+Group=app
+WorkingDirectory=/opt/software-deployment-labs
+
+# Environment
+Environment="CONFIG_FILE_PATH=/opt/software-deployment-labs/src/config.ini"
+EnvironmentFile=-/etc/mywebapp/mywebapp.env
+
+# Pre-start: run migrations
+ExecStartPre=/usr/bin/python3 /opt/software-deployment-labs/run.py migrate-only
+
+# Start the application
+ExecStart=/usr/bin/python3 -m uvicorn src.main:app \
+    --host 127.0.0.1 \
+    --port 8000 \
+    --workers 4 \
+    --log-level info
+
+# Restart policy
+Restart=on-failure
+RestartSec=10
+StartLimitInterval=300
+StartLimitBurst=5
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

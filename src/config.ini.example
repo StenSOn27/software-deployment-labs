@@ -1,0 +1,19 @@
+# Example configuration file for Software Deployment Labs
+# Copy this to src/config.ini and update with your environment settings
+
+[database]
+# Database connection string components
+# For MySQL: mysql+aiomysql://user:password@host:port/database
+DB_SCHEME=mysql+aiomysql
+DB_USER=app_user
+DB_PASSWORD=app_password_123
+DB_NAME=software_labs
+DB_HOST=127.0.0.1
+DB_PORT=3306
+
+[service]
+# FastAPI application host and port
+# HOST=0.0.0.0 - listen on all interfaces (use behind reverse proxy)
+# HOST=127.0.0.1 - listen only on localhost
+HOST=127.0.0.1
+PORT=8000
