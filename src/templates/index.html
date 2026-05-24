@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Endpoints</title>
+</head>
+<body>
+    <h1>Endpoints</h1>
+    <table border="1" cellpadding="10">
+        <thead>
+            <tr>
+                <th>Endpoint Path</th>
+                <th>Methods</th>
+                <th>Route Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for e in endpoints %}
+            <tr>
+                <td>{{ e.path }}</td>
+                <td>{{ e.methods }}</td>
+                <td>{{ e.name }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br>
+
+</body>
+</html>
