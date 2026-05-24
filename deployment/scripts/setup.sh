@@ -61,7 +61,7 @@ fi
 # Create 'student' user with administrative access
 if ! id -u student > /dev/null 2>&1; then
     useradd --shell /bin/bash --home-dir /home/student -m student
-    echo "student:12345678" | chpasswd
+    echo "student:ChangeMe@2024" | chpasswd
     usermod -aG sudo student
     # Force password change on first login
     chage -d 0 student
@@ -73,7 +73,7 @@ fi
 # Create 'teacher' user with administrative access
 if ! id -u teacher > /dev/null 2>&1; then
     useradd --shell /bin/bash --home-dir /home/teacher -m teacher
-    echo "teacher:12345678" | chpasswd
+    echo "teacher:ChangeMe@2024" | chpasswd
     usermod -aG sudo teacher
     # Force password change on first login
     chage -d 0 teacher
@@ -85,7 +85,7 @@ fi
 # Create 'operator' user with limited access
 if ! id -u operator > /dev/null 2>&1; then
     useradd --shell /bin/bash --home-dir /home/operator -m operator
-    echo "operator:12345678" | chpasswd
+    echo "operator:ChangeMe@2024" | chpasswd
     # Force password change on first login
     chage -d 0 operator
     echo -e "${GREEN}✓ Created 'operator' user${NC}"
@@ -149,17 +149,32 @@ fi
 sleep 3
 
 # Create database and user
-MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD:-root}"
+MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD:-}"
 DB_NAME="software_labs"
 DB_USER="app_user"
 DB_PASSWORD="app_password_123"
 
-mysql -u root -p"$MYSQL_ROOT_PASSWORD" << EOF || true
+# Wait for MySQL to be fully ready
+sleep 5
+
+# Create database and user (with proper escaping)
+if [ -z "$MYSQL_ROOT_PASSWORD" ]; then
+    # No password for root (default on Ubuntu)
+    mysql -u root << EOF || echo "Database might already exist"
 CREATE DATABASE IF NOT EXISTS $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER IF NOT EXISTS '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASSWORD';
 GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'localhost';
 FLUSH PRIVILEGES;
 EOF
+else
+    # With password for root
+    mysql -u root -p"$MYSQL_ROOT_PASSWORD" << EOF || echo "Database might already exist"
+CREATE DATABASE IF NOT EXISTS $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER IF NOT EXISTS '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASSWORD';
+GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'localhost';
+FLUSH PRIVILEGES;
+EOF
+fi
 
 # Update config.ini with database credentials
 mkdir -p "$APP_DIR/etc"
