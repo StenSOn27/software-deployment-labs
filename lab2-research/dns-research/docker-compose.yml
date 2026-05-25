@@ -1,0 +1,70 @@
+version: '3.9'
+
+services:
+  dns-server:
+    image: alpine:latest
+    container_name: dns-research-server
+    command: sh -c "apk add dnsmasq &&
+                    echo 'address=/myservice.internal.corp/10.0.0.50' > /etc/dnsmasq.conf &&
+                    echo 'log-queries' >> /etc/dnsmasq.conf &&
+                    dnsmasq -k --log-facility=-"
+    networks:
+      - dns-test-network
+    ports:
+      - "53:53/udp"
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "53"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  ubuntu-tester:
+    image: ubuntu:latest
+    container_name: dns-research-ubuntu
+    depends_on:
+      dns-server:
+        condition: service_healthy
+    networks:
+      - dns-test-network
+    dns:
+      - dns-server
+    dns_search:
+      - corp
+    stdin_open: true
+    tty: true
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        apt-get update > /dev/null 2>&1
+        apt-get install -y dnsutils bind-utils > /dev/null 2>&1
+        echo "Ubuntu (glibc) container ready"
+        echo "Try: getent hosts myservice.internal"
+        /bin/bash
+
+  alpine-tester:
+    image: alpine:latest
+    container_name: dns-research-alpine
+    depends_on:
+      dns-server:
+        condition: service_healthy
+    networks:
+      - dns-test-network
+    dns:
+      - dns-server
+    dns_search:
+      - corp
+    stdin_open: true
+    tty: true
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        apk add bind-tools > /dev/null 2>&1
+        echo "Alpine (musl) container ready"
+        echo "Try: getent hosts myservice.internal"
+        /bin/sh
+
+networks:
+  dns-test-network:
+    driver: bridge
